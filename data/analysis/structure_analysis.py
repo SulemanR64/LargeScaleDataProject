@@ -30,3 +30,22 @@ print("\n" + "="*80)
 print("DATA TYPES")
 print("="*80)
 print(df.dtypes)
+
+#list how many unique values are in each column, higher unique values = better PK 
+print("\n" + "="*80)
+print("UNIQUE VALUE COUNT")
+print("="*80)
+for column in df.columns:
+    print(f"{column:25s}: {df[column].nunique():6,} unique entries")
+
+#list how many null values 
+print("\n" + "="*80)
+print("NULL VALUE COUNT")
+print("="*80)
+for column in df.columns:
+    nullcount = df[column].isnull().sum()
+    nullpercentage = (nullcount / len(df)) * 100
+    print(f"{column:25s}| Nulls: {nullcount:6,} ({nullpercentage:5.1f}%)")
+
+
+
