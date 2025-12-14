@@ -3,7 +3,7 @@ import os
 
 
 inputfile = 'LargeScaleDataProject/data/raw/CarSales_Dataset.csv'
-outputdir = 'LargeScaleDataProject/data/processed_data/CSVs'
+outputdir = 'LargeScaleDataProject/data/processed_data/RBDMS'
 
 df = pd.read_csv(inputfile)
 os.makedirs(outputdir, exist_ok= True)
