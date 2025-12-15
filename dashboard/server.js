@@ -1,51 +1,35 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-
 const app = express();
-
-// Middleware
 app.use(express.json());
 app.use(cors());
 app.use(express.static('public'));
-
-// Import Car model
 const Car = require('./models/Car');
-
-// Connection string
 const connectionString = "mongodb://localhost:27017/CarSales?retryWrites=true";
-
-// Connect to MongoDB
 mongoose.connect(connectionString, {
   family: 4,
   tls: false
 })
-.then(() => console.log("✅ Connected to MongoDB database"))
-.catch(err => console.error("❌ MongoDB connection error:", err));
-
-// Helper function to build filter object
+.then(() => console.log("Connected to MongoDB database"))
+.catch(err => console.error(" MongoDB connection error:", err));
 function buildFilter(query) {
-  const filter = {};
-  
+  const filter = {}; 
   if (query.manufacturer) filter.manufacturer = query.manufacturer;
   if (query.fuelType) filter.FuelType = query.fuelType;
-  
   if (query.minPrice || query.maxPrice) {
     filter.price = {};
     if (query.minPrice) filter.price.$gte = Number(query.minPrice);
     if (query.maxPrice) filter.price.$lte = Number(query.maxPrice);
   }
-  
   if (query.minYear || query.maxYear) {
     filter.YearOfManufacturing = {};
     if (query.minYear) filter.YearOfManufacturing.$gte = Number(query.minYear);
     if (query.maxYear) filter.YearOfManufacturing.$lte = Number(query.maxYear);
   }
-  
   return filter;
 }
-
-// Filter options endpoints
+// API ends
 app.get('/api/manufacturers', async (req, res) => {
   try {
     const manufacturers = await Car.distinct('manufacturer');
@@ -54,7 +38,6 @@ app.get('/api/manufacturers', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 app.get('/api/fuel-types', async (req, res) => {
   try {
     const fuelTypes = await Car.distinct('FuelType');
@@ -63,8 +46,6 @@ app.get('/api/fuel-types', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// Stats with filters
 app.get('/api/stats', async (req, res) => {
   try {
     const filter = buildFilter(req.query);
@@ -72,7 +53,6 @@ app.get('/api/stats', async (req, res) => {
     const totalCars = await Car.countDocuments(filter);
     const manufacturers = await Car.distinct('manufacturer', filter);
     const fuelTypes = await Car.distinct('FuelType', filter);
-    
     res.json({
       totalCars,
       totalManufacturers: manufacturers.length,
@@ -82,8 +62,7 @@ app.get('/api/stats', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// 1. Price by Manufacturer (with filters)
+// START APIS WIRH FILTERS
 app.get('/api/price-by-manufacturer', async (req, res) => {
   try {
     const filter = buildFilter(req.query);
@@ -106,11 +85,9 @@ app.get('/api/price-by-manufacturer', async (req, res) => {
   }
 });
 
-// 2. Fuel Type Distribution (with filters)
 app.get('/api/fuel-type-distribution', async (req, res) => {
   try {
-    const filter = buildFilter(req.query);
-    
+    const filter = buildFilter(req.query);   
     const data = await Car.aggregate([
       { $match: filter },
       {
@@ -127,11 +104,9 @@ app.get('/api/fuel-type-distribution', async (req, res) => {
   }
 });
 
-// 3. Feature Popularity (with filters)
 app.get('/api/feature-popularity', async (req, res) => {
   try {
-    const filter = buildFilter(req.query);
-    
+    const filter = buildFilter(req.query); 
     const data = await Car.aggregate([
       { $match: filter },
       { $unwind: '$features' },
@@ -150,7 +125,6 @@ app.get('/api/feature-popularity', async (req, res) => {
   }
 });
 
-// 4. Dealer Distribution (with filters)
 app.get('/api/dealer-distribution', async (req, res) => {
   try {
     const filter = buildFilter(req.query);
@@ -172,7 +146,6 @@ app.get('/api/dealer-distribution', async (req, res) => {
   }
 });
 
-// 5. Service History (with filters)
 app.get('/api/service-history', async (req, res) => {
   try {
     const filter = buildFilter(req.query);
@@ -197,32 +170,20 @@ app.get('/api/service-history', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// Get filtered cars (paginated)
+// TODO: FIX THIS CARS TAKING FOREVER TO LOAD,
 app.get('/api/cars', async (req, res) => {
     try {
-      console.log('📊 /api/cars endpoint hit!');
-      
       const filter = buildFilter(req.query);
       const limit = parseInt(req.query.limit) || 100;
       const page = parseInt(req.query.page) || 1;
       const skip = (page - 1) * limit;
-      
-      // Get total count
       const totalCount = await Car.countDocuments(filter);
-      console.log('Total cars found:', totalCount);
-      
-      // Get cars
       const cars = await Car.find(filter)
         .skip(skip)
         .limit(limit)
         .lean();
-      
-      console.log('Returning', cars.length, 'cars');
-      
-      // IMPORTANT: Return object, not array
       res.json({
-        cars: cars,           // Array of cars
+        cars: cars,
         totalCount: totalCount,
         currentPage: page,
         totalPages: Math.ceil(totalCount / limit),
@@ -237,9 +198,4 @@ app.get('/api/cars', async (req, res) => {
 // Start server
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log('='.repeat(60));
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
-  console.log('✅ MongoDB connected');
-  console.log('📊 Dashboard ready');
-  console.log('='.repeat(60));
 });

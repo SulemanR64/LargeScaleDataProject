@@ -212,67 +212,6 @@ function changePage(page) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Export to CSV (exports current filter, not just current page)
-async function exportToCSV() {
-    try {
-        const btn = document.getElementById('exportCSV');
-        btn.disabled = true;
-        btn.innerHTML = '⏳ Exporting...';
-
-        const filters = getFiltersFromURL();
-        const params = new URLSearchParams();
-        if (filters.manufacturer) params.append('manufacturer', filters.manufacturer);
-        if (filters.fuelType) params.append('fuelType', filters.fuelType);
-        if (filters.minPrice) params.append('minPrice', filters.minPrice);
-        if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-        if (filters.minYear) params.append('minYear', filters.minYear);
-        if (filters.maxYear) params.append('maxYear', filters.maxYear);
-        params.append('limit', 1000); // Export max 1000 cars
-
-        const response = await fetch(`${API_BASE}/cars?${params.toString()}`);
-        const data = await response.json();
-
-        const csv = convertToCSV(data.cars);
-        downloadCSV(csv, 'filtered_cars.csv');
-
-        btn.disabled = false;
-        btn.innerHTML = '📥 Export CSV';
-    } catch (error) {
-        console.error('Export error:', error);
-        alert('Export failed: ' + error.message);
-    }
-}
-
-function convertToCSV(cars) {
-    const headers = ['Car ID', 'Manufacturer', 'Model', 'Year', 'Price', 'Mileage', 'Fuel Type', 'Engine Size', 'Dealer', 'City'];
-    const rows = cars.map(car => [
-        car._id,
-        car.manufacturer,
-        car.model,
-        car.YearOfManufacturing,
-        car.price,
-        car.mileage,
-        car.FuelType,
-        car.EngineSize,
-        car.dealer.DealerName,
-        car.dealer.DealerCity
-    ]);
-
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
-}
-
-function downloadCSV(csv, filename) {
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    window.URL.revokeObjectURL(url);
-}
-
-// Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadCars(1);
-    document.getElementById('exportCSV').addEventListener('click', exportToCSV);
 });
