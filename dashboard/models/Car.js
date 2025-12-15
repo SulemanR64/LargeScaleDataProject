@@ -1,5 +1,5 @@
 const mongoose = require("mongoose")
-const CarScheme = new mongoose.schema({
+const CarSchema = new mongoose.Schema({
 _id: String,
 manufacturer: String,
 model: String,
@@ -16,10 +16,10 @@ dealer: {
 },
 features: [String],
 ServiceHistory: [{
-    type: mongoose.schema.Types.Mixed
+    type: mongoose.Schema.Types.Mixed
     }],
 AccidentHistory: [{
-    type: mongoose.schema.Types.Mixed
+    type: mongoose.Schema.Types.Mixed
     }]
 }, {
     collection: 'cars',
@@ -27,4 +27,4 @@ AccidentHistory: [{
     strict: false
 });
 
-module.exports = mongoose.model('Car', CarScheme)
+module.exports = mongoose.model('Car', CarSchema)

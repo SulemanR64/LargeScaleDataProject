@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self'; 
+    script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net blob:; 
+    style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; 
+    font-src 'self' https://cdn.jsdelivr.net;
+    img-src 'self' data: https:; ">
+    <title>UK Car Sales Dashboard - MongoDB Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">🚗 UK Car Sales Analytics Dashboard</span>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-success">MongoDB Powered</span>
+                <span class="text-light small">Live Data</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid p-4">
+        <!-- Stats Cards Row (Clean Modern Style) -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stats-card stats-card-blue">
+                    <div class="stats-icon">🚘</div>
+                    <div class="stats-info">
+                        <div class="stats-label">Total Cars</div>
+                        <div class="stats-value" id="totalCars">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card stats-card-green">
+                    <div class="stats-icon">🏭</div>
+                    <div class="stats-info">
+                        <div class="stats-label">Manufacturers</div>
+                        <div class="stats-value" id="totalManufacturers">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card stats-card-orange">
+                    <div class="stats-icon">⛽</div>
+                    <div class="stats-info">
+                        <div class="stats-label">Fuel Types</div>
+                        <div class="stats-value" id="totalFuelTypes">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Panel (Original Professional Style) -->
+        <div class="card mb-4 filter-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">🔍 Interactive Filters</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Manufacturer</label>
+                        <select id="manufacturerFilter" class="form-select">
+                            <option value="">All Manufacturers</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Fuel Type</label>
+                        <select id="fuelTypeFilter" class="form-select">
+                            <option value="">All Fuel Types</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Price Range (£)</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="minPrice" class="form-control" placeholder="Min" value="0">
+                            <span class="input-group-text">-</span>
+                            <input type="number" id="maxPrice" class="form-control" placeholder="Max" value="100000">
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Year Range</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="minYear" class="form-control" placeholder="Min" value="2000">
+                            <span class="input-group-text">-</span>
+                            <input type="number" id="maxYear" class="form-control" placeholder="Max" value="2024">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12 d-flex align-items-center">
+                        <button id="applyFilters" class="btn btn-primary me-2">
+                            <span id="applyButtonText">Apply Filters</span>
+                        </button>
+                        <button id="resetFilters" class="btn btn-secondary me-2">Reset</button>
+                        <button id="viewCars" class="btn btn-success">
+                            <span>📋 View Cars</span>
+                        </button>
+                        <span id="filterStatus" class="ms-3 text-muted"></span>
+                    </div>
+                </div>
+
+        <!-- Charts Grid (Original Color-Coded Headers) -->
+        <div class="row g-4">
+            <!-- Chart 1 - Primary Blue -->
+            <div class="col-lg-6">
+                <div class="card chart-card">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">📊 Average Price by Manufacturer</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 2 - Success Green -->
+            <div class="col-lg-6">
+                <div class="card chart-card">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">🍩 Fuel Type Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="fuelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 3 - Warning Yellow -->
+            <div class="col-lg-6">
+                <div class="card chart-card">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">⭐ Top 10 Features</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="featuresChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 4 - Info Cyan -->
+            <div class="col-lg-6">
+                <div class="card chart-card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">📍 Dealer Distribution (Top 15 Cities)</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="dealerChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 5 - Danger Red, Full Width -->
+            <div class="col-12">
+                <div class="card chart-card">
+                    <div class="card-header bg-danger text-white">
+                        <h6 class="mb-0">🔧 Service History Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="serviceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-5 mb-3">
+            <small class="text-muted">COS6009-B Large Scale Data-Driven Applications | MongoDB Dashboard</small>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
